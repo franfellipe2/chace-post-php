@@ -1,0 +1,38 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+htm{
+    font-size: 16px;
+    font-family: sans-serif;
+}
+body{
+    padding: 30px;
+}
+
+/*
+=========================================
+TIPOGRAFIA
+==========================================
+*/
+a{ color:#e29000; text-decoration: none; }
+a:hover{ text-decoration: underline;}
+h1 a{color: #192833;}
+h1,h2,h3,h4,h5,h6{
+    margin-bottom: 15px;
+    margin-top: 15px;
+}
+p{
+    margin-bottom: 15px;
+}
+
+/*
+=========================================
+CONTENT
+==========================================
+*/
+.list-posts article{
+    padding: 15px;
+    border: solid 1px #ddd;
+    margin: 15px 0;
+}
