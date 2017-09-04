@@ -2,11 +2,17 @@
 
 require './config.php';
 
+$cahce = new cache\Cache();
+$cahce->creatCacheFile(27, 'post', 'article', array('title' => 'hello', 'content' => 'hi world'));
+
+var_dump($cahce);
+
+die;
 
 $urlRouter = (!empty($_GET['url']) ? explode('/', $_GET['url']) : NULL);
 
 //MONTA A PAGINA
-require BASE_THEME .DIRECTORY_SEPARATOR .'header.php';
+require BASE_THEME . DIRECTORY_SEPARATOR . 'header.php';
 
 //VERIFICA QUAL ARQUIVO INCLUIR
 if (!$urlRouter):
@@ -27,4 +33,4 @@ else:
 
 endif;
 
-require BASE_THEME .DIRECTORY_SEPARATOR . 'footer.php';
+require BASE_THEME . DIRECTORY_SEPARATOR . 'footer.php';

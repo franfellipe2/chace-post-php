@@ -13,7 +13,7 @@ define('BASE_THEME_URI', BASE_URL.'/theme');
 
 
 spl_autoload_register(function($className) {
-    $fileName = BASE_DIR . DIRECTORY_SEPARATOR . '_app' . DIRECTORY_SEPARATOR . 'classes' . DIRECTORY_SEPARATOR . $className . '.class.php';
+    $fileName = BASE_DIR . DIRECTORY_SEPARATOR . '_app' . DIRECTORY_SEPARATOR . 'classes' . DIRECTORY_SEPARATOR . $className . '.class.php';    
     if (file_exists($fileName)) {
         require_once $fileName;
     }
