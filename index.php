@@ -2,11 +2,6 @@
 
 require './config.php';
 
-$cahce = new cache\Cache();
-$cahce->exeCacheObjeto(27, 'post', 'article', array('title' => 'hello', 'content' => 'hi world', 'data' => date('d/m/Y')));
-echo $cahce->getResult();
-die;
-
 $urlRouter = (!empty($_GET['url']) ? explode('/', $_GET['url']) : NULL);
 
 //MONTA A PAGINA
