@@ -13,8 +13,12 @@ class Cache {
     private $objId;
     private $type;
     private $data;
-    private $fileCacheName;
-    private $fileCacheBase = BASE_THEME . DIRECTORY_SEPARATOR . 'cache';
+    private $templateDir = BASE_THEME . DIRECTORY_SEPARATOR . 'templates';
+    private $templateName;
+    private $templateData;
+    private $cacheDir = BASE_THEME . DIRECTORY_SEPARATOR . 'cache';
+    private $cacheName;
+    private $result;
 
     const tabName = 'cache';
 
@@ -36,36 +40,28 @@ class Cache {
         endif;
     }
 
+    public function objeto() {
+        
+    }
+
     /**
      * Executa o cache: cria, ou atualiza se nescessário
      * retorna o conteudo do cache
      */
-    public function exeCacheObjeto($objId, $type, $templateName) {
+    public function exeCacheObjeto($objId, $type, $templateName, array $templateData) {
         $this->objId = (int) $objId;
         $this->type = (string) $type;
+        $this->templateName = $this->templateDir . DIRECTORY_SEPARATOR . $templateName . '.html';
+        $this->templateData = $templateData;
+        $this->cacheName = $this->cacheDir . DIRECTORY_SEPARATOR . "$templateName-" . $this->objId . '-' . $this->type . '.html';
 
-        $this->fileCacheName = $this->fileCacheBase . DIRECTORY_SEPARATOR . '$templateName-' . $objId . '-' . $type . '.html';
-
-        if (!$this->check() || $this->data['cache_status'] == 0 || !file_exists($this->fileCacheName)):
+        if (!$this->check() || $this->data['cache_status'] == 0 || !file_exists($this->cacheName)):
+            echo '<<<<<---- gerou cache';
             $this->creatCacheFile($this->objId, $this->type, $templateName);
         else:
-
+            $this->result = file_get_contents($this->cacheName);
+            echo '>>>>>---- pegou cache';
         endif;
-    }
-
-    public function creatCacheFile($objId, $type, $templateName, $templateData) {
-        $this->objId = (int) $objId;
-        $this->type = (string) $type;
-        $this->fileCacheName = $this->fileCacheName ? $this->fileCacheName : $this->fileCacheBase . DIRECTORY_SEPARATOR . '$templateName-' . $objId . '-' . $type . '.html';
-
-        //CADASTRA NO BANCO        
-        $this->creatDB($this->objId, $this->type);
-
-        //MONTA O TEMPLATE
-//        $template = file_get_contents(BASE_THEME . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'article.html');
-//        $template = str_replace(array_keys($dataPost), array_values($dataPost), $template);
-        //GEREA O CACHE
-        //file_put_contents($this->fileCacheName, $template);
     }
 
     /**
@@ -76,39 +72,50 @@ class Cache {
      */
     public function creatDB($objId, $type) {
         if ($this->check()):
-            $this->upCache(array('cache_status' => 1, 'cache_date' => date('Y-m-d')));
+            $this->upCache(array('cache_status' => 1, 'cache_date' => date('Y-m-d H:i:s')));
         else:
-//            $data = [
-//                'cache_objid' => $this->objId,
-//                'cache_type' => $this->type,
-//                'cache_date' => date('Y-m-d'),
-//                'cache_status' => 1
-//            ];
-//            $creatCache = new \sql\Create();
-//            $creatCache->ExeCreate(self::tabName, $data);
+            $this->data = [
+                'cache_objid' => $this->objId,
+                'cache_type' => $this->type,
+                'cache_date' => date('Y-m-d H:i:s'),
+                'cache_status' => 1
+            ];
+            $creatCache = new \sql\Create();
+            $creatCache->ExeCreate(self::tabName, $this->data);
+            if ($creatCache->getResult()):
+                echo '<br>Cadastrou no banco<br>';
+            endif;
         endif;
+    }
+
+    private function creatCacheFile() {
+
+        //CRIA OU ATUALIZA O BANCO
+        $this->creatDB($this->objId, $this->type);
+
+        //MONTA O TEMPLATE
+        $this->mountFileContent();
     }
 
     /**
      * Atualiza o status do cache no banco de dados
      * @param type $intStatus
      */
-    private function upCache($data = array()) {
+    private function upCache(array $data) {
         $up = new \sql\Update();
         $up->ExeUpdate(self::tabName, $data, 'WHERE cache_objid = :id AND cache_type = :type', "id={$this->objId}&type={$this->type}");
-        $msg = 'Atualização realizada com sucesso!';
     }
 
     /**
-     * Verifica se existe cache
+     * Verifica se existe cache no banco
      * @return boolean
      */
     private function check() {
-
         if ($this->data):
             return true;
         else:
-            return $this->readDB();
+            $check = $this->readDB();
+            return $check;
         endif;
     }
 
@@ -123,11 +130,27 @@ class Cache {
         if ($readCach->getResult()):
             //atualiza
             $this->data = $readCach->getResult()[0];
-
             return true;
         else:
             return false;
         endif;
+    }
+
+    /**
+     * Passa os dados do banco para o template
+     */
+    private function mountFileContent() {
+        //Pega os valores
+        $keys = explode(' ', '{$' . implode('} {$', array_keys($this->templateData)) . '}');        
+        $vals = array_values($this->templateData);        
+        
+        //Monta o template
+        $getTemplate = file_get_contents($this->templateName);
+        $mountTemplate = str_replace($keys, $vals, $getTemplate);
+        
+        //GEREA O CACHE
+        file_put_contents($this->cacheName, $mountTemplate);
+        $this->result = file_get_contents($this->cacheName);
     }
 
 }

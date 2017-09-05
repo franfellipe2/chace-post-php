@@ -3,9 +3,7 @@
 require './config.php';
 
 $cahce = new cache\Cache();
-$cahce->creatCacheFile(27, 'post', 'article', array('title' => 'hello', 'content' => 'hi world'));
-
-var_dump($cahce);
+$cahce->exeCacheObjeto(27, 'post', 'article', array('title' => 'hello', 'content' => 'hi world', 'data' => date('d/m/Y')));
 
 die;
 
