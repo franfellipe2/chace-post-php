@@ -10,38 +10,113 @@ endif;
 
 class Cache {
 
+    // CHECK-LIST ----------------------------
+    # + zerar o cache na atualizacao do artigo
+    # + verificar se existe cache
+    # + cadastrar no banco
+    # + atualizar o cahce
+    # - deletar o banco e os aquivos de cache
+    // ---------------------------------------
+      
+    // OBJETO QUE SERÁ CRIADO O CACHE
     private $objId;
     private $type;
-    private $data;
-    private $templateDir = BASE_THEME . DIRECTORY_SEPARATOR . 'templates';
-    private $templateName;
+    // DADOS DO TEMPLATE
     private $templateData;
-    private $cacheDir = BASE_THEME . DIRECTORY_SEPARATOR . 'cache';
+    private $templateName;
+    private $templateDir = BASE_THEME . DIRECTORY_SEPARATOR . 'templates';
+    private $templateFileName;
+    // DADOS DO CACHE
+    private $data;
     private $cacheName;
+    private $cacheDir = BASE_THEME . DIRECTORY_SEPARATOR . 'cache';
+    private $cacheFileName;
     private $result;
-
+    // TABALE DO CACHE NO BANCO
     const tabName = 'cache';
-
-    #zerar o cache na atualizacao do artigo -no
-    #verificar se existe cache -no
-    #cadastrar no banco -no
-    #deletar o banco e os aquivos de cache -no
-    #atualizar o cahce -no
-
+    
     /**
-     * Reseta o cache, assim quando o usuário acessar a pagina do artigo será criado um novo arquivo de cache     * 
+     * Retorna o nome do arquivo do cache gerado
+     * @return string
      */
-    public function reset($objId, $type) {
-        $this->objId = (int) $objId;
-        $this->type = (string) $type;
-
-        if ($this->check()):
-            $this->upCache(array('cache_status' => 0));
-        endif;
+    function getCacheName() {
+        return $this->cacheName;
     }
 
-    public function objeto() {
-        
+    /**
+     * Retorna o caminho da pasta do cache
+     * @return string
+     */
+    function getCacheDir() {
+        return $this->cacheDir;
+    }
+
+    /**
+     * Retorna o caminho e o nome do arquivo do cache
+     * @return string
+     */
+    function getCacheFileName() {
+        return $this->cacheFileName;
+    }
+
+    /**
+     * Retorna o resultado do arquivo do cache
+     * @return string
+     */
+    function getResult() {
+        return $this->result;
+    }
+    
+    /**
+     * Passar achave id da tabela no banco de dados
+     * @param int $objId
+     */
+    function setObjId($objId) {
+        $this->objId = (int) $objId;
+    }
+
+    /**
+     * Passar o tipo do cache: Ex: post, category, page, etc...
+     * @param string $type
+     */
+    function setType($type) {
+        $this->type = (string) $type;
+    }
+
+    /**
+     * Passar o caminho do diretorio onde estão os arquivos de template
+     * @param string $templateDir
+     */
+    function setTemplateDir($templateDir) {
+        $this->templateDir = (string) $templateDir;
+    }
+
+    /**
+     * Passar o nome do arquivo da template sem a sua extensão, e, dever ser um arquivo html, ex: meutemplate.html
+     * @param string $templateName ex: meutemplate
+     */
+    function setTemplateName($templateName) {
+        $this->templateName = (string) $templateName;
+    }
+
+    /**
+     * Passar um array com os dados que irão alimentar o template
+     * @param array $templateData
+     */
+    function setTemplateData(array $templateData) {
+        $this->templateData = $templateData;
+    }
+
+    /**
+     * Parra o endereço onde ficarão os arquivos de cache
+     * @param string $cacheDir
+     */
+    function setCacheDir($cacheDir) {
+        $this->cacheDir = (string) $cacheDir;
+    }
+
+    function setCacheName($cacheName) {
+        $this->cacheName = $cacheName;
     }
 
     /**
@@ -49,17 +124,19 @@ class Cache {
      * retorna o conteudo do cache
      */
     public function exeCacheObjeto($objId, $type, $templateName, array $templateData) {
-        $this->objId = (int) $objId;
-        $this->type = (string) $type;
-        $this->templateName = $this->templateDir . DIRECTORY_SEPARATOR . $templateName . '.html';
-        $this->templateData = $templateData;
-        $this->cacheName = $this->cacheDir . DIRECTORY_SEPARATOR . "$templateName-" . $this->objId . '-' . $this->type . '.html';
+        $this->setTemplateName($templateName);
+        $this->setObjId($objId);
+        $this->setType($type);
+        $this->setTemplateData($templateData);
+        $this->setCacheName("$this->templateName-" . $this->objId . '-' . $this->type . '.html');
+        $this->templateFileName = $this->templateDir . DIRECTORY_SEPARATOR . $this->templateName . '.html';
+        $this->cacheFileName = $this->cacheDir . DIRECTORY_SEPARATOR . $this->cacheName;
 
-        if (!$this->check() || $this->data['cache_status'] == 0 || !file_exists($this->cacheName)):
+        if (!$this->check() || $this->data['cache_status'] == 0 || !file_exists($this->cacheFileName)):
             echo '<<<<<---- gerou cache';
-            $this->creatCacheFile($this->objId, $this->type, $templateName);
+            $this->creatCacheFile($this->objId, $this->type, $this->templateName);
         else:
-            $this->result = file_get_contents($this->cacheName);
+            $this->result = file_get_contents($this->cacheFileName);
             echo '>>>>>---- pegou cache';
         endif;
     }
@@ -70,7 +147,7 @@ class Cache {
      * @param int $objId id do objeto que será criado o chace
      * @param string $type tipo de arquivo do cahce, ex: post, category ou outro
      */
-    public function creatDB($objId, $type) {
+    public function creatDB() {
         if ($this->check()):
             $this->upCache(array('cache_status' => 1, 'cache_date' => date('Y-m-d H:i:s')));
         else:
@@ -88,6 +165,21 @@ class Cache {
         endif;
     }
 
+    /**
+     * Reseta o cache, assim quando o usuário acessar a pagina do artigo será criado um novo arquivo de cache 
+     */
+    public function reset($objId, $type) {
+        $this->objId = (int) $objId;
+        $this->type = (string) $type;
+
+        if ($this->check()):
+            $this->upCache(array('cache_status' => 0));
+        endif;
+    }
+    
+    /**
+     * cria ou atualiza o arquivo e o banco de cache
+     */
     private function creatCacheFile() {
 
         //CRIA OU ATUALIZA O BANCO
@@ -141,16 +233,20 @@ class Cache {
      */
     private function mountFileContent() {
         //Pega os valores
-        $keys = explode(' ', '{$' . implode('} {$', array_keys($this->templateData)) . '}');        
-        $vals = array_values($this->templateData);        
-        
+        $keys = explode(' ', '{$' . implode('} {$', array_keys($this->templateData)) . '}');
+        $vals = array_values($this->templateData);
+
         //Monta o template
-        $getTemplate = file_get_contents($this->templateName);
+        $getTemplate = file_get_contents($this->templateFileName);
         $mountTemplate = str_replace($keys, $vals, $getTemplate);
-        
+
         //GEREA O CACHE
-        file_put_contents($this->cacheName, $mountTemplate);
-        $this->result = file_get_contents($this->cacheName);
+        file_put_contents($this->cacheFileName, $mountTemplate);
+        $this->result = file_get_contents($this->cacheFileName);
+    }
+    
+    public function __destruct() {
+        
     }
 
 }
