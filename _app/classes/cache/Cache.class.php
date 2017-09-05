@@ -15,8 +15,9 @@ class Cache {
     # + verificar se existe cache
     # + cadastrar no banco
     # + atualizar o cahce
-    # - deletar o banco e os aquivos de cache
+    # + deletar o banco e os aquivos de cache
     // ---------------------------------------
+    
     // OBJETO QUE SERÁ CRIADO O CACHE
     private $objId;
     private $type;
