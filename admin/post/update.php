@@ -25,19 +25,8 @@ if (!empty($post['send'])):
     $msg = 'Atualização realizada com sucesso!';
 
     //ZERA O CACHE
-    // assim quando a pagina do artigo for acessad vai gerar um novo cache com os novos dados ataulizados
-    $readCache = new sql\Read();
-    $readCache->ExeRead('cache', 'WHERE cache_objid = :postid AND cache_type = :type', "postid={$getId}&type=post");
-
-    //se tiver ZERA O CACHE NO BANCO
-    if ($readCache->getResult()):
-
-        $CacheData = ['cache_status' => '0'];
-
-        $upCache = new \sql\Update();
-        $upCache->ExeUpdate('cache', $CacheData, 'WHERE cache_objid = :postid AND cache_type = :type', "postid={$getId}&type=post");
-
-    endif;
+    $cache = new cache\Cache();
+    $cache->reset($getId, 'post');
 
 else:
     //LE O ARTIGO

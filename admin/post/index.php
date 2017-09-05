@@ -20,6 +20,9 @@ if ($delId):
         $del = new sql\Delete();
         $del->ExeDelete('post', 'WHERE post_id = :delid', "delid={$delId}");
         if ($del->getRowCount()):
+
+            cache\Cache::delCacheObjeto($delId, 'post');
+
             $sucess = "Artigo deletado com sucesso!: <b>{$delTitle}</b>";
         endif;
     endif;

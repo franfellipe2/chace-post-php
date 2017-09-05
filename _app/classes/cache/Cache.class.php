@@ -17,7 +17,6 @@ class Cache {
     # + atualizar o cahce
     # + deletar o banco e os aquivos de cache
     // ---------------------------------------
-    
     // OBJETO QUE SERÁ CRIADO O CACHE
     private $objId;
     private $type;
@@ -136,11 +135,15 @@ class Cache {
         $this->cacheFileName = $this->cacheDir . DIRECTORY_SEPARATOR . $this->cacheName;
 
         if (!$this->check() || $this->data['cache_status'] == 0 || !file_exists($this->cacheFileName)):
-            echo '<<<<<---- gerou cache';
+                
+            echo '<br><<<<<---- gerou cache<br>';            
             $this->creatCacheFile($this->objId, $this->type, $this->templateName);
+            
         else:
+            
             $this->result = file_get_contents($this->cacheFileName);
-            echo '>>>>>---- pegou cache';
+            echo '<br>>>>>>---- pegou cache<br>';
+            
         endif;
     }
 
@@ -174,7 +177,8 @@ class Cache {
     public function reset($objId, $type) {
         $this->objId = (int) $objId;
         $this->type = (string) $type;
-
+        
+        //Se tiver um cache, reseta; senão, não faz dada
         if ($this->check()):
             $this->upCache(array('cache_status' => 0));
         endif;
