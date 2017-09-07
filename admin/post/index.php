@@ -12,7 +12,8 @@ $delTitle = filter_input(INPUT_GET, 't');
 $confirmDel = null;
 $sucess = null;
 
-if ($delId):
+if ($delId):    
+    
     $confirm = filter_input(INPUT_GET, 'confirm', FILTER_VALIDATE_BOOLEAN);
     if (!$confirm):
         $confirmDel = BASE_ADMIN . '/?area=post/index.php&delid=' . $delId . '&t=' . $delTitle . '&confirm=true';
@@ -21,8 +22,7 @@ if ($delId):
         $del->ExeDelete('post', 'WHERE post_id = :delid', "delid={$delId}");
         if ($del->getRowCount()):
 
-            cache\Cache::delCacheObjeto($delId, 'post');
-
+            cache\Cache::delCachePost($delId, 'post');
             $sucess = "Artigo deletado com sucesso!: <b>{$delTitle}</b>";
         endif;
     endif;

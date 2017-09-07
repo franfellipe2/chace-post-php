@@ -16,9 +16,10 @@ class Cache {
     # + cadastrar no banco
     # + atualizar o cahce
     # + deletar o banco e os aquivos de cache
+    # - cache de pagina
     // ---------------------------------------
     // OBJETO QUE SERÁ CRIADO O CACHE
-    private $objId;
+    private $postId;
     private $type;
     // DADOS DO TEMPLATE
     private $templateData;
@@ -30,10 +31,29 @@ class Cache {
     private $cacheName;
     private $cacheDir = BASE_THEME . DIRECTORY_SEPARATOR . 'cache';
     private $cacheFileName;
+    //RESULTADOS
     private $result;
+    private $error;
 
     // TABALE DO CACHE NO BANCO
     const tabName = 'cache';
+
+    /**
+     * Retorna o resultado do arquivo do cache
+     * @return string
+     */
+    function getResult() {
+        return $this->result;
+    }
+    
+    /**
+     * Retorn os possíveis erros
+     * @return string
+     */
+    public function getError(){
+        return $this->error;
+    }
+
 
     /**
      * Retorna o nome do arquivo do cache gerado
@@ -58,21 +78,13 @@ class Cache {
     function getCacheFileName() {
         return $this->cacheFileName;
     }
-
-    /**
-     * Retorna o resultado do arquivo do cache
-     * @return string
-     */
-    function getResult() {
-        return $this->result;
-    }
-
+    
     /**
      * Passar achave id da tabela no banco de dados
-     * @param int $objId
+     * @param int $postId
      */
-    function setObjId($objId) {
-        $this->objId = (int) $objId;
+    function setPostId($postId) {
+        $this->postId = (int) $postId;
     }
 
     /**
@@ -123,34 +135,33 @@ class Cache {
      * Executa o cache: cria, ou atualiza se nescessário
      * retorna o conteudo do cache
      */
-    public function exeCacheObjeto($objId, $type, $templateName, array $templateData) {
+    public function exeCacheObjeto($postId, $type, $templateName, array $templateData) {
 
         $this->setTemplateName($templateName);
-        $this->setObjId($objId);
+        $this->setPostId($postId);
         $this->setType($type);
         $this->setTemplateData($templateData);
-        $this->setCacheName("{$this->objId}-{$this->type}-{$this->templateName}.html");
+        $this->setCacheName("{$this->postId}-{$this->type}-{$this->templateName}.html");
 
         $this->templateFileName = $this->templateDir . DIRECTORY_SEPARATOR . $this->templateName . '.html';
         $this->cacheFileName = $this->cacheDir . DIRECTORY_SEPARATOR . $this->cacheName;
 
         if (!$this->check() || $this->data['cache_status'] == 0 || !file_exists($this->cacheFileName)):
-                
-            echo '<br><<<<<---- gerou cache<br>';            
-            $this->creatCacheFile($this->objId, $this->type, $this->templateName);
-            
+
+            echo '<br><<<<<---- gerou cache<br>';
+            $this->creatCacheFile($this->postId, $this->type, $this->templateName);
+
         else:
-            
-            $this->result = file_get_contents($this->cacheFileName);
             echo '<br>>>>>>---- pegou cache<br>';
-            
+            $this->result = file_get_contents($this->cacheFileName);
+
         endif;
     }
 
     /**
      * Cria o arquivo de cahce
      * 
-     * @param int $objId id do objeto que será criado o chace
+     * @param int $postId id do objeto que será criado o chace
      * @param string $type tipo de arquivo do cahce, ex: post, category ou outro
      */
     public function creatDB() {
@@ -158,15 +169,15 @@ class Cache {
             $this->upCache(array('cache_status' => 1, 'cache_date' => date('Y-m-d H:i:s')));
         else:
             $this->data = [
-                'cache_objid' => $this->objId,
+                'cache_postid' => $this->postId,
                 'cache_type' => $this->type,
                 'cache_date' => date('Y-m-d H:i:s'),
                 'cache_status' => 1
             ];
             $creatCache = new \sql\Create();
             $creatCache->ExeCreate(self::tabName, $this->data);
-            if ($creatCache->getResult()):
-                echo '<br>Cadastrou no banco<br>';
+            if (!$creatCache->getResult()):
+                $this->error = 'Erro ao cadastrar cache!';
             endif;
         endif;
     }
@@ -174,10 +185,10 @@ class Cache {
     /**
      * Reseta o cache, assim quando o usuário acessar a pagina do artigo será criado um novo arquivo de cache 
      */
-    public function reset($objId, $type) {
-        $this->objId = (int) $objId;
+    public function reset($postId, $type) {
+        $this->postId = (int) $postId;
         $this->type = (string) $type;
-        
+
         //Se tiver um cache, reseta; senão, não faz dada
         if ($this->check()):
             $this->upCache(array('cache_status' => 0));
@@ -190,7 +201,7 @@ class Cache {
     private function creatCacheFile() {
 
         //CRIA OU ATUALIZA O BANCO
-        $this->creatDB($this->objId, $this->type);
+        $this->creatDB($this->postId, $this->type);
 
         //MONTA O TEMPLATE
         $this->mountFileContent();
@@ -198,35 +209,35 @@ class Cache {
 
     /**
      * Atualiza o status do cache no banco de dados
-     * @param type $intStatus
+     * @param array $intStatus
      */
     private function upCache(array $data) {
         $up = new \sql\Update();
-        $up->ExeUpdate(self::tabName, $data, 'WHERE cache_objid = :id AND cache_type = :type', "id={$this->objId}&type={$this->type}");
+        $up->ExeUpdate(self::tabName, $data, 'WHERE cache_postid = :id', "id={$this->postId}");
     }
 
     /**
      * Delata os arquivos do cache e os dados do cache no banco
      * 
-     * @param int $objId id chave primaria da tabela do objeto no banco, ex: post_id
+     * @param int $postId id chave primaria da tabela do objeto no banco, ex: post_id
      * @param string $type tipo do objeto/tabela, ex: posts
      */
-    static public function delCacheObjeto($objId, $type) {
+    static public function delCachePost($postId, $type) {
         $cache = new Cache();
-        $cache->setObjId($objId);
+        $cache->setPostId($postId);
         $cache->setType($type);
 
         //DELETAR O BANCO
         $delDB = new \sql\Delete();
-        $delDB->ExeDelete(self::tabName, 'WHERE cache_objid = :id AND cache_type = :type', "id={$cache->objId}&type={$cache->type}");
+        $delDB->ExeDelete(self::tabName, 'WHERE cache_postid = :id', "id={$cache->postId}");
 
         //DELETAR OS ARQUIVOS        
-        $cacheFileName = $cache->cacheDir . DIRECTORY_SEPARATOR . "{$cache->objId}-{$cache->type}-*.html";
+        $cache->cacheFileName = $cache->cacheDir . DIRECTORY_SEPARATOR . "{$cache->postId}-{$cache->type}-*.html";
 
-        foreach (glob($cacheFileName) as $file):
+        foreach (glob($cache->cacheFileName) as $file):
             //deleta o arquivo
             unlink($file);
-        endforeach;
+        endforeach;       
     }
 
     /**
@@ -248,7 +259,7 @@ class Cache {
     private function readDB() {
 
         $readCach = new \sql\Read();
-        $readCach->ExeRead(self::tabName, 'WHERE cache_objid = :id AND cache_type = :type', "id={$this->objId}&type={$this->type}");
+        $readCach->ExeRead(self::tabName, 'WHERE cache_postid = :id', "id={$this->postId}");
 
         if ($readCach->getResult()):
             //atualiza
