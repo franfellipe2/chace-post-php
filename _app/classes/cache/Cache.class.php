@@ -18,6 +18,7 @@ class Cache {
     # + deletar o banco e os aquivos de cache
     # - cache de pagina
     // ---------------------------------------
+    private $cacheTime;
     // OBJETO QUE SERÁ CRIADO O CACHE
     private $postId;
     private $type;
@@ -45,15 +46,14 @@ class Cache {
     function getResult() {
         return $this->result;
     }
-    
+
     /**
      * Retorn os possíveis erros
      * @return string
      */
-    public function getError(){
+    public function getError() {
         return $this->error;
     }
-
 
     /**
      * Retorna o nome do arquivo do cache gerado
@@ -76,9 +76,12 @@ class Cache {
      * @return string
      */
     function getCacheFileName() {
+        if (!$this->cacheFileName):
+            $this->cacheFileName = $this->cacheDir . DIRECTORY_SEPARATOR . $this->cacheName;
+        endif;
         return $this->cacheFileName;
     }
-    
+
     /**
      * Passar achave id da tabela no banco de dados
      * @param int $postId
@@ -131,6 +134,32 @@ class Cache {
         $this->cacheName = $cacheName;
     }
 
+    public function init($cacheTime) {
+
+        ob_start();
+
+        $this->cacheTime = (int) $cacheTime;
+
+        $p = 'http' . (isset($_SERVER["HTTPS"]) && strtolower($_SERVER["HTTPS"]) == "on" ? 's' : '') . '://';
+        $url = $p . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+
+        $this->setCacheName(md5($url) . '.html');
+
+        if (file_exists($this->getCacheFileName()) && ( (filemtime($this->getCacheFileName()) + $this->cacheTime) > time())):
+            $this->result = file_get_contents($this->getCacheFileName());
+        else:
+            $this->result = false;
+        endif;
+    }
+
+    public function close() {
+
+        $this->result = ob_get_contents();
+        file_put_contents($this->getCacheFileName(), $this->result);
+
+        ob_end_flush();
+    }
+
     /**
      * Executa o cache: cria, ou atualiza se nescessário
      * retorna o conteudo do cache
@@ -144,9 +173,8 @@ class Cache {
         $this->setCacheName("{$this->postId}-{$this->type}-{$this->templateName}.html");
 
         $this->templateFileName = $this->templateDir . DIRECTORY_SEPARATOR . $this->templateName . '.html';
-        $this->cacheFileName = $this->cacheDir . DIRECTORY_SEPARATOR . $this->cacheName;
 
-        if (!$this->check() || $this->data['cache_status'] == 0 || !file_exists($this->cacheFileName)):
+        if (!$this->check() || $this->data['cache_status'] == 0 || !file_exists($this->getCacheFileName())):
 
             echo '<br><<<<<---- gerou cache do post<br>';
             $this->creatCacheFile($this->postId, $this->type, $this->templateName);
@@ -237,7 +265,7 @@ class Cache {
         foreach (glob($cache->cacheFileName) as $file):
             //deleta o arquivo
             unlink($file);
-        endforeach;       
+        endforeach;
     }
 
     /**
