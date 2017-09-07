@@ -148,11 +148,11 @@ class Cache {
 
         if (!$this->check() || $this->data['cache_status'] == 0 || !file_exists($this->cacheFileName)):
 
-            echo '<br><<<<<---- gerou cache<br>';
+            echo '<br><<<<<---- gerou cache do post<br>';
             $this->creatCacheFile($this->postId, $this->type, $this->templateName);
 
         else:
-            echo '<br>>>>>>---- pegou cache<br>';
+            echo '<br>>>>>>---- pegou cache do post<br>';
             $this->result = file_get_contents($this->cacheFileName);
 
         endif;

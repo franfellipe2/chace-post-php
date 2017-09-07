@@ -10,8 +10,6 @@ if ($read->getResult()):
     $cachePost = new cache\Cache();
     $cachePost->exeCacheObjeto($read->getResult()[0]['post_id'], 'post', 'article', $read->getResult()[0]);
     echo $cachePost->getResult();
-    
-    var_dump($cachePost);
 
 endif;
 ?>
