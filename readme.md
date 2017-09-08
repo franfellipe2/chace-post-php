@@ -14,10 +14,12 @@ Este sistema de cache foi projetado para trabalhar com com o recurso de template
 Para funcionar é preciso criar arquivos templates.html em uma pasta 'templates'
 
 Exemplo article.html:
+```
 <article>
     <h1>{$post_title}</h1>
     <p>{$post_content}</p>
 </article>
+```
 
 ```php
     
