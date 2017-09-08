@@ -20,7 +20,8 @@ Sistema de cache php em 2 níveis:
 ```php
 //Inicia o bloco do cache
 $cachePage = new cache\Cache();
-$cachePage->Init(3);
+//Define o tempo de expiração em segundos
+$cachePage->Init(60);
 ```
 ```
 <!-- Exemplo de conteudo -->
