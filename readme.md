@@ -13,7 +13,7 @@ Sistema de cache php em 2 níveis:
 Este sistema de cache foi projetado para trabalhar com com o recurso de templates.
 Para funcionar é preciso criar arquivos templates.html em uma pasta 'templates'
 
-Exemplo article.html:
+Exemplo templates/article.html:
 ```
 <article>
     <h1>{$post_title}</h1>
