@@ -1,8 +1,5 @@
 <?php
-
 require './config.php';
-
-echo 'Area não monitorada pelo cache - CABECALHO! - data atual: ' . date('H:i:s') . '<BR>';
 
 //INICIA O CACHE
 $cachePage = new cache\Cache();
@@ -15,7 +12,8 @@ if ($cachePage->getResult()):
     echo $cachePage->getResult();
 
 // Redenriza o conteudo
-else:
+else:    
+    
     $urlRouter = (!empty($_GET['url']) ? explode('/', $_GET['url']) : NULL);
 
     //MONTA A PAGINA
@@ -41,9 +39,8 @@ else:
     endif;
 
     require BASE_THEME . DIRECTORY_SEPARATOR . 'footer.php';
+    
 endif;
 
 //FINALIZA E CRIA O CACHE
 $cachePage->Close();
-
-echo '<BR>Area não monitorada pelo cache - FOOTER! - data atual: ' . date('H:i:s') . '<BR>';

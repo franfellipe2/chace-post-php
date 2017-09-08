@@ -10,14 +10,6 @@ endif;
 
 class Cache {
 
-    // CHECK-LIST ----------------------------
-    # + zerar o cache na atualizacao do artigo
-    # + verificar se existe cache
-    # + cadastrar no banco
-    # + atualizar o cahce
-    # + deletar o banco e os aquivos de cache
-    # - cache de pagina
-    // ---------------------------------------
     private $cacheTime;
     // OBJETO QUE SERÁ CRIADO O CACHE
     private $postId;
@@ -134,37 +126,54 @@ class Cache {
         $this->cacheName = $cacheName;
     }
 
-    public function init($cacheTime) {
-
-        ob_start();
-
+    /**
+     * Inicia o bloco de cache
+     * @param int $cacheTime
+     * @param string $nameId
+     */
+    public function init($cacheTime, $nameId = null) {
         $this->cacheTime = (int) $cacheTime;
 
-        $p = 'http' . (isset($_SERVER["HTTPS"]) && strtolower($_SERVER["HTTPS"]) == "on" ? 's' : '') . '://';
-        $url = $p . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        if ($this->cacheTime > 0):
 
-        $this->setCacheName(md5($url) . '.html');
+            ob_start();
 
-        if (file_exists($this->getCacheFileName()) && ( (filemtime($this->getCacheFileName()) + $this->cacheTime) > time())):
-            $this->result = file_get_contents($this->getCacheFileName());
-        else:
-            $this->result = false;
+            $this->setCacheName(md5( $_SERVER['REQUEST_URI'] . $nameId) . '.html');
+
+            if (file_exists($this->getCacheFileName()) && ( (filemtime($this->getCacheFileName()) + $this->cacheTime) > time())):                
+                $this->result = file_get_contents($this->getCacheFileName());
+            else:
+                $this->result = false;
+            endif;
+
         endif;
     }
 
+    /**
+     * Fecha o bloco de chace
+     */
     public function close() {
 
-        $this->result = ob_get_contents();
-        file_put_contents($this->getCacheFileName(), $this->result);
+        if ($this->cacheTime > 0):
 
-        ob_end_flush();
+            $this->result = ob_get_contents();
+            file_put_contents($this->getCacheFileName(), $this->result);
+
+            ob_end_flush();
+            
+        endif;
     }
 
     /**
-     * Executa o cache: cria, ou atualiza se nescessário
-     * retorna o conteudo do cache
+     * Executa o cache do conteudo do posto: cria, mostra ou atualiza o cache se nescessário
+     * 
+     * @param int $postId id do artigo para o qual será gerado o cache
+     * @param string $type o tipo de postagem: post, page, etc...
+     * @param string $templateName nome do template.html utilizado para gerar o cache
+     * @param array $templateData dados do post que serão passados para o template.html, ex: data['title' => 'my first cache', 'content' => 'hello world']
+     * @param boolean $show deixe como true para exibir o conteudo, false para não exibir. Em ambos o cache será armazenado no atributo <b>result</b>
      */
-    public function exeCacheObjeto($postId, $type, $templateName, array $templateData) {
+    public function exeCacheObjeto($postId, $type, $templateName, array $templateData, $show = true) {
 
         $this->setTemplateName($templateName);
         $this->setPostId($postId);
@@ -173,24 +182,30 @@ class Cache {
         $this->setCacheName("{$this->postId}-{$this->type}-{$this->templateName}.html");
 
         $this->templateFileName = $this->templateDir . DIRECTORY_SEPARATOR . $this->templateName . '.html';
+        $this->getCacheFileName();
 
-        if (!$this->check() || $this->data['cache_status'] == 0 || !file_exists($this->getCacheFileName())):
+        if (!$this->check() || $this->data['cache_status'] == 0 || !file_exists($this->cacheFileName)):           
 
-            echo '<br><<<<<---- gerou cache do post<br>';
             $this->creatCacheFile($this->postId, $this->type, $this->templateName);
+            if ($show):
+                echo $this->result;
+            endif;
 
-        else:
-            echo '<br>>>>>>---- pegou cache do post<br>';
+        else:            
+
             $this->result = file_get_contents($this->cacheFileName);
+            if ($show):
+                echo $this->result;
+            endif;
 
         endif;
     }
 
     /**
-     * Cria o arquivo de cahce
+     * Cadastra no banco os dados do arquivo de cache
      * 
-     * @param int $postId id do objeto que será criado o chace
-     * @param string $type tipo de arquivo do cahce, ex: post, category ou outro
+     * @param int $postId id do post que será gerado o chace
+     * @param string $type tipo de postagem, ex: post, category ou outro
      */
     public function creatDB() {
         if ($this->check()):
@@ -212,19 +227,21 @@ class Cache {
 
     /**
      * Reseta o cache, assim quando o usuário acessar a pagina do artigo será criado um novo arquivo de cache 
+     * @param type $postId
+     * @param type $type
      */
-    public function reset($postId, $type) {
-        $this->postId = (int) $postId;
-        $this->type = (string) $type;
+    static public function reset($postId) {
+        $res = new Cache;
+        $res->setPostId($postId);
 
         //Se tiver um cache, reseta; senão, não faz dada
-        if ($this->check()):
-            $this->upCache(array('cache_status' => 0));
+        if ($res->check()):
+            $res->upCache(array('cache_status' => 0));
         endif;
     }
 
     /**
-     * cria ou atualiza o arquivo e o banco de cache
+     * cria ou atualiza o arquivo e o banco do cache
      */
     private function creatCacheFile() {
 
@@ -282,7 +299,8 @@ class Cache {
     }
 
     /**
-     * Le os dados do cahce no banco
+     * Le os dados do cahce no banco e armazena no atributo <b>data</b>
+     * @return boolean
      */
     private function readDB() {
 
@@ -290,7 +308,7 @@ class Cache {
         $readCach->ExeRead(self::tabName, 'WHERE cache_postid = :id', "id={$this->postId}");
 
         if ($readCach->getResult()):
-            //atualiza
+            //caputra os dados do banco
             $this->data = $readCach->getResult()[0];
             return true;
         else:
@@ -299,7 +317,7 @@ class Cache {
     }
 
     /**
-     * Passa os dados do banco para o template
+     * Passa os dados para o template
      */
     private function mountFileContent() {
         //Pega os valores

@@ -6,7 +6,7 @@
  */
 function get_area() {
 
-    $default = 'painel.php';
+    $default = 'post/index.php';
 
     if (empty($_GET['area'])):
         return $default;

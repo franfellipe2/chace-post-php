@@ -25,8 +25,7 @@ if (!empty($post['send'])):
     $msg = 'Atualização realizada com sucesso!';
 
     //ZERA O CACHE
-    $cache = new cache\Cache();
-    $cache->reset($getId, 'post');
+    cache\Cache::reset($getId);
 
 else:
     //LE O ARTIGO
