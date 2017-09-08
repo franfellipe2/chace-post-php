@@ -5,8 +5,9 @@ Sistema de cache php em 2 níveis:
 * 2- Nível de post: Gera e mantem o cache de uma postagem enquanto o seu conteudo não seja alterado
 
 
-# Como usar
-## Cache da postagem
+## Como usar
+
+### Cache da postagem
 
 ```php
     $cachePost = new cache\Cache();
@@ -14,7 +15,7 @@ Sistema de cache php em 2 níveis:
 ```
 
 
-## Cache da pagina
+### Cache da pagina
 
 
 ```php
