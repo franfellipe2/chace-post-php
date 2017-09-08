@@ -7,9 +7,25 @@ Sistema de cache php em 2 níveis:
 
 ## Como usar
 
+
 ### Cache da postagem
+* Requisitos:
+Este sistema de cache foi projetado para trabalhar com com o recurso de templates.
+Para funcionar é preciso criar arquivos templates.html em uma pasta 'templates'
+
+Exemplo article.html:
+<article>
+    <h1>{$post_title}</h1>
+    <p>{$post_content}</p>
+</article>
 
 ```php
+    
+    $arrPostData = [
+        'post_title' => 'My first cache',
+        'post_content' => 'Hello World!'
+    ];
+
     $cachePost = new cache\Cache();
     $cachePost->exeCacheObjeto($post_id, 'post', 'article', $arrPostData );
 ```
